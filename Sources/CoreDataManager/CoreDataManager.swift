@@ -10,8 +10,13 @@ import Foundation
 import CoreData
 
 public struct CoreDataManagerConfiguration {
-    let persistentContainerName: String
-    let migrationBlock: (() -> Void)?
+    public init(persistentContainerName: String, migrationBlock: (() -> Void)?) {
+        self.persistentContainerName = persistentContainerName
+        self.migrationBlock = migrationBlock
+    }
+    
+    fileprivate let persistentContainerName: String
+    fileprivate let migrationBlock: (() -> Void)?
 }
 
 @available(OSX 10.12, *)
