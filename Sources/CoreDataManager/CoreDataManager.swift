@@ -9,19 +9,19 @@
 import Foundation
 import CoreData
 
-struct CoreDataManagerConfiguration {
+public struct CoreDataManagerConfiguration {
     let persistentContainerName: String
     let migrationBlock: (() -> Void)?
 }
 
 @available(OSX 10.12, *)
 @objc
-class CoreDataManager: NSObject {
+public class CoreDataManager: NSObject {
     
-    static var configuration: CoreDataManagerConfiguration?
+    public static var configuration: CoreDataManagerConfiguration?
     
     @objc
-    static let shared = CoreDataManager()
+    public static let shared = CoreDataManager()
     private let persistentContainer: NSPersistentContainer
     private lazy var backgroundContext: NSManagedObjectContext = {
         return persistentContainer.newBackgroundContext()
@@ -44,14 +44,14 @@ class CoreDataManager: NSObject {
     }
     
     @objc
-    func performBackgroundTask(block: @escaping (NSManagedObjectContext) -> Void) {
+    public func performBackgroundTask(block: @escaping (NSManagedObjectContext) -> Void) {
         backgroundContext.perform {
             block(self.backgroundContext)
         }
     }
     
     @objc
-    func performTask(block: @escaping (NSManagedObjectContext) -> Void) {
+    public func performTask(block: @escaping (NSManagedObjectContext) -> Void) {
         persistentContainer.viewContext.performAndWait {
             block(self.persistentContainer.viewContext)
         }
@@ -59,7 +59,7 @@ class CoreDataManager: NSObject {
 
     @objc
     @discardableResult
-    func saveMainContext() -> Bool {
+    public func saveMainContext() -> Bool {
         var result = true
         performTask { (ctx) in
             do {
@@ -72,7 +72,7 @@ class CoreDataManager: NSObject {
     }
     
     @objc
-    func saveBackgroundContext(completion: @escaping () -> Void) {
+    public func saveBackgroundContext(completion: @escaping () -> Void) {
         performBackgroundTask { (ctx) in
             do {
                 try ctx.saveIfNeeded()
@@ -83,7 +83,7 @@ class CoreDataManager: NSObject {
     }
     
     @objc
-    func performFetchRequest(request: NSFetchRequest<NSFetchRequestResult>) -> [NSManagedObject] {
+    public func performFetchRequest(request: NSFetchRequest<NSFetchRequestResult>) -> [NSManagedObject] {
         assert(Thread.current.isMainThread)
         
         var result: [NSManagedObject] = []
@@ -96,7 +96,7 @@ class CoreDataManager: NSObject {
     }
     
     @nonobjc
-    func performFetchRequest<T>(request: NSFetchRequest<T>) -> [T] where T: NSManagedObject {
+    public func performFetchRequest<T>(request: NSFetchRequest<T>) -> [T] where T: NSManagedObject {
         assert(Thread.current.isMainThread)
         
         var result: [T] = []
@@ -108,7 +108,7 @@ class CoreDataManager: NSObject {
         return result
     }
     
-    func performFetchRequest<T>(request: NSFetchRequest<T>, completion: @escaping ([T]) -> Void) where T: NSManagedObject {
+    public func performFetchRequest<T>(request: NSFetchRequest<T>, completion: @escaping ([T]) -> Void) where T: NSManagedObject {
         
         performBackgroundTask { (ctx) in
             let result = try? ctx.fetch(request)
@@ -130,7 +130,7 @@ class CoreDataManager: NSObject {
     }
     
     @objc
-    func fetchOrInsertNew(of type: NSEntityDescription, fetchRequest: NSFetchRequest<NSFetchRequestResult>, values: [String: Any]) -> NSManagedObject? {
+    public func fetchOrInsertNew(of type: NSEntityDescription, fetchRequest: NSFetchRequest<NSFetchRequestResult>, values: [String: Any]) -> NSManagedObject? {
         var value = performFetchRequest(request: fetchRequest).first
         if value == nil {
             value = insertNew(of: type, values: values)
@@ -141,7 +141,7 @@ class CoreDataManager: NSObject {
     }
     
     @nonobjc
-    func fetchOrInsertNew<T>(of type: T.Type, fetchRequest: NSFetchRequest<T>, values: [String: Any]) -> T? where T: NSManagedObject {
+    public func fetchOrInsertNew<T>(of type: T.Type, fetchRequest: NSFetchRequest<T>, values: [String: Any]) -> T? where T: NSManagedObject {
         var value = performFetchRequest(request: fetchRequest).first
         if value == nil {
             value = insertNew(of: type, values: values)
@@ -152,7 +152,7 @@ class CoreDataManager: NSObject {
     }
 
     @objc
-    func insertNew(of type: NSEntityDescription, values: [String: Any]) -> NSManagedObject? {
+    public func insertNew(of type: NSEntityDescription, values: [String: Any]) -> NSManagedObject? {
         assert(Thread.isMainThread)
         
         var newObject: NSManagedObject?
@@ -173,7 +173,7 @@ class CoreDataManager: NSObject {
     }
     
     @nonobjc
-    func insertNew<T>(of type: T.Type, values: [String: Any]) -> T? where T: NSManagedObject {
+    public func insertNew<T>(of type: T.Type, values: [String: Any]) -> T? where T: NSManagedObject {
         assert(Thread.isMainThread)
         
         var newObject: T?
@@ -196,7 +196,7 @@ class CoreDataManager: NSObject {
     ///
     @objc
     @discardableResult
-    func update(object: NSManagedObject, values: [String: Any]) -> NSManagedObject {
+    public func update(object: NSManagedObject, values: [String: Any]) -> NSManagedObject {
         for (key, value) in values {
             object.setValue(value, forKey: key)
         }
@@ -210,7 +210,7 @@ class CoreDataManager: NSObject {
     
     @discardableResult
     @nonobjc
-    func update<T>(object: T, values: [String: Any]) -> T where T: NSManagedObject {
+    public func update<T>(object: T, values: [String: Any]) -> T where T: NSManagedObject {
         
         for (key, value) in values {
             object.setValue(value, forKey: key)
@@ -225,7 +225,7 @@ class CoreDataManager: NSObject {
     
     /// Background context
     @nonobjc
-    func insertNew<T>(of type: T.Type, values: [[String: Any]], completion: @escaping (([T]) -> Void)) where T: NSManagedObject {
+    public func insertNew<T>(of type: T.Type, values: [[String: Any]], completion: @escaping (([T]) -> Void)) where T: NSManagedObject {
         CoreDataManager.shared.performBackgroundTask { (ctx) in
             var objects = [NSManagedObject]()
             for value in values {
@@ -253,7 +253,7 @@ class CoreDataManager: NSObject {
     }
     
     @objc(deleteObjects:)
-    func delete(objects: [NSManagedObject]) {
+    public func delete(objects: [NSManagedObject]) {
         performTask { (ctx) in
             for object in objects {
                 ctx.delete(object)
@@ -265,7 +265,7 @@ class CoreDataManager: NSObject {
     }
     
     @objc(deleteObjects:completion:)
-    func delete(objects: [NSManagedObject], completion: @escaping () -> Void) {
+    public func delete(objects: [NSManagedObject], completion: @escaping () -> Void) {
         performBackgroundTask { (ctx) in
             for object in objects {
                 ctx.delete(object)
@@ -279,7 +279,7 @@ class CoreDataManager: NSObject {
     }
     
     @nonobjc
-    func deleteFetchRequest<T>(request: NSFetchRequest<T>) where T: NSManagedObject {
+    public func deleteFetchRequest<T>(request: NSFetchRequest<T>) where T: NSManagedObject {
         request.returnsObjectsAsFaults = true
         let objects = CoreDataManager.shared.performFetchRequest(request: request) as [T]
         performTask { (ctx) in
@@ -294,13 +294,13 @@ class CoreDataManager: NSObject {
     
     /// Deletes all objects of type on background context
     @nonobjc
-    func deleteAll<T>(of type: T.Type, completion: @escaping (Int) -> Void) where T: NSManagedObject {
+    public func deleteAll<T>(of type: T.Type, completion: @escaping (Int) -> Void) where T: NSManagedObject {
         let request = type.fetchRequest()
         deleteFetchRequest(request: request, completion: completion)
     }
     
     /// Deletes all objects from request on background context
-    func deleteFetchRequest(request: NSFetchRequest<NSFetchRequestResult>, completion: @escaping (Int) -> Void) {
+    public func deleteFetchRequest(request: NSFetchRequest<NSFetchRequestResult>, completion: @escaping (Int) -> Void) {
         performBackgroundTask { (ctx) in
             request.returnsObjectsAsFaults = true
             var totalDeleted = 0
@@ -321,19 +321,19 @@ class CoreDataManager: NSObject {
         }
     }
 
-    func controller<T>(fetchRequest: NSFetchRequest<T>, sectionNameKeyPath: String?, cacheName: String?) -> NSFetchedResultsController<T> where T: NSFetchRequestResult {
+    public func controller<T>(fetchRequest: NSFetchRequest<T>, sectionNameKeyPath: String?, cacheName: String?) -> NSFetchedResultsController<T> where T: NSFetchRequestResult {
         return NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: persistentContainer.viewContext, sectionNameKeyPath: sectionNameKeyPath, cacheName: cacheName)
     }
     
     @objc
-    func controller(fetchRequest: NSFetchRequest<NSFetchRequestResult>, sectionNameKeyPath: String?, cacheName: String?) -> NSFetchedResultsController<NSFetchRequestResult> {
+    public func controller(fetchRequest: NSFetchRequest<NSFetchRequestResult>, sectionNameKeyPath: String?, cacheName: String?) -> NSFetchedResultsController<NSFetchRequestResult> {
         return NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: persistentContainer.viewContext, sectionNameKeyPath: sectionNameKeyPath, cacheName: cacheName)
     }
 }
 
 extension NSManagedObjectContext {
     @discardableResult
-    func saveIfNeeded() throws -> Bool {
+    public func saveIfNeeded() throws -> Bool {
         if hasChanges {
             try save()
             return true
@@ -343,7 +343,7 @@ extension NSManagedObjectContext {
     
     @objc
     @discardableResult
-    func saveIfNeededObjc() -> Bool {
+    public func saveIfNeededObjc() -> Bool {
         if hasChanges {
             do {
                 try saveIfNeeded()
