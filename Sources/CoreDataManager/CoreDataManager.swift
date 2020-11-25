@@ -9,7 +9,8 @@
 import Foundation
 import CoreData
 
-public struct CoreDataManagerConfiguration {
+@objc
+public class CoreDataManagerConfiguration: NSObject {
     public init(persistentContainerName: String, migrationBlock: (() -> Void)?) {
         self.persistentContainerName = persistentContainerName
         self.migrationBlock = migrationBlock
