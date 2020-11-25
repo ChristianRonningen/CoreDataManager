@@ -24,6 +24,7 @@ public class CoreDataManagerConfiguration: NSObject {
 @objc
 public class CoreDataManager: NSObject {
     
+    @objc
     public static var configuration: CoreDataManagerConfiguration?
     
     @objc
